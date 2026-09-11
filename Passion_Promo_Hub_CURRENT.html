@@ -2585,22 +2585,21 @@ function openScheda(username){
   document.getElementById('scheda-body').innerHTML=`
     <div class="scheda-section"><h4>📞 Suggerimento chiamata</h4>
       <div class="scheda-script">${_buildCallSuggestion(u)}</div></div>
-    <details class="scheda-section"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:0;border:none;background:none"><h4 style="margin:0">🎫 Ultimi 10 Ticket</h4><span style="font-size:10px;color:#9CA3AF;font-weight:400">▼ apri</span></summary>
-      ${(()=>{
+    ${(()=>{
       const tks=(ticketsData[u.u.toLowerCase()]||ticketsData[u.u]||[]);
       const stColors={WIN:'#16A34A',LOSE:'#DC2626',OPEN:'#D97706'};
       const stBg={WIN:'#F0FDF4',LOSE:'#FEF2F2',OPEN:'#FFFBEB'};
       const stIcon={WIN:'✅',LOSE:'❌',OPEN:'⏳'};
-      let html='<div class="ticket-box">';
-      html+='<div style="font-size:10px;color:#7C3AED;font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
-      html+='<span>🎫 ULTIMI TICKET</span>';
+      // Stats per header collassato
+      let _statsHdr='';
       if(tks.length){
         const wins=tks.filter(t=>t.st==="WIN").length;
         const loses=tks.filter(t=>t.st==="LOSE").length;
         const opens=tks.filter(t=>t.st==="OPEN").length;
-        html+='<span style="font-size:11px;font-weight:600"><span style="color:#16A34A">✅'+wins+'W</span> <span style="color:#DC2626">❌'+loses+'L</span>'+( opens?'<span style="color:#D97706"> ⏳'+opens+'</span>':'')+'</span>';
+        _statsHdr='<span style="font-size:11px;font-weight:600;margin-left:8px"><span style="color:#16A34A">✅'+wins+'W</span> <span style="color:#DC2626">❌'+loses+'L</span>'+(opens?'<span style="color:#D97706"> ⏳'+opens+'</span>':'')+'</span>';
       }
-      html+='</div>';
+      const _tId='tk_'+u.u.replace(/[^a-z0-9]/gi,'');
+      let html='<div class="ticket-box">';
       if(!tks.length){
         html+=hasId?'<div class="tb-id" onclick="openBetReceipt(\'${u.id}\',event)" style="cursor:pointer">🎫 ${u.id}</div>':'<p style="color:#94A3B8;font-style:italic;font-size:12px;margin:0">Nessun ticket oggi</p>';
       } else {
@@ -2620,9 +2619,14 @@ function openScheda(username){
       }
       if(hasId&&!tks.length) html+='<button onclick="openBetReceipt(\'${u.id}\',event)" style="margin-top:8px;width:100%;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer">👁 Visualizza giocata</button>';
       html+='</div>';
-      return html;
+      return '<div class="scheda-section" style="padding:0">'
+        +'<div onclick="var c=document.getElementById(\''+_tId+'\');var a=document.getElementById(\'a_'+_tId+'\');var op=c.style.display===\'none\';c.style.display=op?\'block\':\'none\';a.textContent=op?\'▲ chiudi\':\'▼ apri\';" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:8px;user-select:none">'
+        +'<h4 style="margin:0">🎫 Ultimi 10 Ticket'+_statsHdr+'</h4>'
+        +'<span id="a_'+_tId+'" style="font-size:10px;color:#9CA3AF;font-weight:400">▼ apri</span>'
+        +'</div>'
+        +'<div id="'+_tId+'" style="display:none;padding:0 16px 12px">'+html+'</div>'
+        +'</div>';
     })()}
-    </details>
     ${u.dnc?`<div style="background:#FEF2F2;border:2px solid #EF4444;border-radius:8px;padding:10px;margin-bottom:10px">
       <div style="font-weight:700;color:#EF4444;font-size:13px">⛔ NON CONTATTARE</div>
       <div style="font-size:11px;color:#6B7280;margin-top:3px">${u.auto?'Utente autoescluso. ':''}${u.segn?'Segnalato dal provider. ':''}</div>
