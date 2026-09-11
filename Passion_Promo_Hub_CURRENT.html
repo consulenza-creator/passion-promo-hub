@@ -2620,11 +2620,11 @@ function openScheda(username){
       if(hasId&&!tks.length) html+='<button onclick="openBetReceipt(\'${u.id}\',event)" style="margin-top:8px;width:100%;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer">👁 Visualizza giocata</button>';
       html+='</div>';
       return '<div class="scheda-section" style="padding:0">'
-        +'<div onclick="var c=document.getElementById(\''+_tId+'\');var a=document.getElementById(\'a_'+_tId+'\');var op=c.style.display===\'none\';c.style.display=op?\'block\':\'none\';a.textContent=op?\'▲ chiudi\':\'▼ apri\';" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:8px;user-select:none">'
+        +'<div onclick="_toggleTk(this)" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:8px;user-select:none">'
         +'<h4 style="margin:0">🎫 Ultimi 10 Ticket'+_statsHdr+'</h4>'
-        +'<span id="a_'+_tId+'" style="font-size:10px;color:#9CA3AF;font-weight:400">▼ apri</span>'
+        +'<span class="tkarr" style="font-size:10px;color:#9CA3AF;font-weight:400">▼ apri</span>'
         +'</div>'
-        +'<div id="'+_tId+'" style="display:none;padding:0 16px 12px">'+html+'</div>'
+        +'<div style="display:none;padding:0 16px 12px">'+html+'</div>'
         +'</div>';
     })()}
     ${u.dnc?`<div style="background:#FEF2F2;border:2px solid #EF4444;border-radius:8px;padding:10px;margin-bottom:10px">
@@ -4233,6 +4233,7 @@ function resetDay(){if(!confirm('Azzerare tutti gli esiti di oggi?'))return;call
 
 // ── BET RECEIPT MODAL ──
 let _currentBetId = null;
+function _toggleTk(h){var b=h.nextElementSibling;var o=b.style.display==='none';b.style.display=o?'block':'none';h.querySelector('.tkarr').textContent=o?'▲ chiudi':'▼ apri';}
 function openBetReceipt(id, e) {
   if(e) e.stopPropagation();
   _currentBetId = id;
