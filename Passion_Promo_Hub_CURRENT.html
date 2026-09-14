@@ -1519,8 +1519,7 @@ function loadMaster(){
       if(!el||!el.textContent.trim()){console.warn('master-gz-data mancante');resolve();return;}
       const gz=el.textContent.trim();
       const bin=atob(gz);
-      const bytes=new Uint8Array(bin.length);
-      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
       const ds=new DecompressionStream('gzip');
       const wr=ds.writable.getWriter(),rd=ds.readable.getReader();
       wr.write(bytes);wr.close();
@@ -4707,6 +4706,88 @@ function _dashSport() {
     :'<div style="padding:20px;color:#6B7280;font-size:12px">Nessun qualificato con dati storico sport.</div>';
 }
 // ── fine blocco dashboard ──
+
+
+
+// ══════════════════════════════════════════════════════════════
+// LOGIN, INIT APP — aggiunto per fix apertura Hub
+// ══════════════════════════════════════════════════════════════
+function resetLoginError(){var el=document.getElementById('login-error');if(el)el.textContent='';}
+
+function doOpLogin(){
+  var u=(document.getElementById('op-username')||{value:''}).value.trim();
+  var p=(document.getElementById('op-pin-field')||{value:''}).value.trim();
+  if(!u||!p){var el=document.getElementById('login-error');if(el)el.textContent='Inserisci email/nome e password.';return;}
+  var found=null;
+  // Cerca in AM_ACCOUNTS (superadmin / supervisor)
+  if(typeof AM_ACCOUNTS!=='undefined'){
+    for(var i=0;i<AM_ACCOUNTS.length;i++){
+      var a=AM_ACCOUNTS[i];
+      if(!a.attivo)continue;
+      if((a.email===u||a.nome.toLowerCase()===u.toLowerCase())&&a.pwd===p){
+        found={name:a.nome,id:a.id,isAdmin:a.ruolo==='superadmin',isSupervisor:a.ruolo==='supervisor',isTeamLeader:false,filiere:a.filiera?[a.filiera]:[],fathername:[],ruolo:a.ruolo,email:a.email};
+        break;
+      }
+    }
+  }
+  // Cerca in DEFAULT_OPERATORS (operatori con PIN)
+  if(!found&&typeof DEFAULT_OPERATORS!=='undefined'){
+    var ops=[].concat((cfg&&cfg.operators)||[]).concat(DEFAULT_OPERATORS);
+    for(var j=0;j<ops.length;j++){
+      var op=ops[j];
+      if(!op.active)continue;
+      if(op.name&&op.name.toLowerCase()===u.toLowerCase()&&String(op.pin)===p){
+        found={name:op.name,id:op.id,isAdmin:false,isSupervisor:false,isTeamLeader:false,filiere:op.filiere||[],fathername:op.fathername||[],ruolo:'operatore'};
+        break;
+      }
+    }
+  }
+  if(!found){var errEl=document.getElementById('login-error');if(errEl)errEl.textContent='Credenziali non valide.';return;}
+  currentUser=found;
+  try{localStorage.setItem(LS_USER,JSON.stringify(found));}catch(e){}
+  _initApp();
+}
+
+function _initApp(){
+  var ld=document.getElementById('loading'),sl=document.getElementById('screen-login'),sa=document.getElementById('screen-app');
+  if(ld)ld.style.display='none';
+  if(sl)sl.style.display='none';
+  if(sa){sa.style.display='flex';}
+  var chip=document.getElementById('user-chip');if(chip)chip.textContent=currentUser?currentUser.name:'—';
+  var hd=document.getElementById('hdr-date');if(hd)hd.textContent=todayDisp();
+  // Init caricamento dati master (una sola volta)
+  if(!masterLoadPromise){
+    masterLoadPromise=loadMaster().then(function(){
+      masterReady=true;
+      var tc=document.getElementById('tc-tutti');
+      if(tc)tc.textContent=masterUsers.length.toLocaleString('it-IT');
+      try{fillFnSelects();}catch(e){}
+      if(activeTab==='tutti')renderTutti();
+      console.log('[Hub] Master ready:',masterUsers.length,'utenti');
+    });
+  }
+  // Vai al tab dashboard
+  try{switchTab('dash');}catch(e){}
+  // Firebase e notifiche
+  try{if(typeof startFirebaseSync==='function')startFirebaseSync();}catch(e){}
+  try{if(typeof _startCommPolling==='function')_startCommPolling();}catch(e){}
+}
+
+// Auto-init alla fine del caricamento pagina
+window.addEventListener('load',function(){
+  var ld=document.getElementById('loading');
+  if(ld)ld.style.display='none';
+  try{
+    var saved=localStorage.getItem(typeof LS_USER!=='undefined'?LS_USER:'crm_v3_user');
+    if(saved){
+      var u=JSON.parse(saved);
+      if(u&&u.name){currentUser=u;_initApp();return;}
+    }
+  }catch(e){}
+  // Nessuna sessione salvata: mostra login
+  var sl=document.getElementById('screen-login');
+  if(sl)sl.style.display='flex';
+});
 
 </script>
 
