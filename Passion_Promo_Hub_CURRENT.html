@@ -1536,6 +1536,7 @@ function loadMaster(){
         const n=cols.u.length;masterUsers=[];
         function normFil(f){if(!f)return'FilieraOnline';const fl=f.toLowerCase();if(fl==='passiongroup'||fl.includes('passion'))return'PassionGroup';if(fl==='microgame'||fl.startsWith('sk'))return'Microgame';return'FilieraOnline';}
         for(let i=0;i<n;i++)masterUsers.push({u:cols.u[i],f:normFil(cols.f[i]),c:cols.c[i],t:cols.t[i],cp:cols.cp[i],vt:cols.vt[i],tk:cols.tk[i],pm:cols.pm[i],vm:cols.vm[i],sc:cols.sc[i],fn:cols.fn[i],dr:cols.dr?cols.dr[i]:'',tgg:cols.tgg?cols.tgg[i]:0,ult:cols.ult?cols.ult[i]:'',s90:cols.s90?cols.s90[i]:0,g90:cols.g90?cols.g90[i]:0,ps:cols.ps?cols.ps[i]:0});
+        window.masterUsers = masterUsers;
         console.log('loadMaster OK:',masterUsers.length,'utenti caricati');
         resolve();
       })().catch(e=>{console.warn('loadMaster async error',e);resolve();});
@@ -3071,16 +3072,17 @@ function renderTutti(){
       }
     }
   }
-  if(!masterReady){return;}
+  if(!masterReady&&!window.masterReady){return;}
   var fil=document.getElementById('flt-t-fil').value;
   var statoFlt=document.getElementById('flt-t-stato')?document.getElementById('flt-t-stato').value:'';
   var fn=document.getElementById('flt-t-fn').value,q=document.getElementById('flt-t-search').value.toLowerCase().trim();
-  var _masterBase=!currentUser.isAdmin?(masterUsers.filter(function(u){
+  var _mu=(masterUsers&&masterUsers.length)?masterUsers:(window.masterUsers||[]);
+  var _masterBase=!currentUser.isAdmin?(_mu.filter(function(u){
     if(currentUser.filiere&&currentUser.filiere.length>0&&!currentUser.filiere.includes(u.f))return false;
     if(currentUser.fathername&&currentUser.fathername.length>0&&!currentUser.fathername.includes(u.fn))return false;
     return true;
-  })):masterUsers;
-  tuttiFilt=_masterBase.filter(function(u){
+  })):_mu;
+  tuttiFilt=(_masterBase||[]).filter(function(u){
     if(fil&&u.f!==fil)return false;
     if(statoFlt){var _h=STORICO_SPORT&&STORICO_SPORT[(u.u||'').toLowerCase()]||null;if(computeStatoLifecycle(_h).label!==statoFlt)return false;}
     if(fn&&(u.fn||'')!==fn)return false;
