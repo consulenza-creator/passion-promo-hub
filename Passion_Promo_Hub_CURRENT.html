@@ -516,7 +516,7 @@ th[data-tip],[data-tip]{cursor:help}
     <div class="tab active" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard</div>
     <div class="tab" id="tab-oggi" onclick="switchTab('oggi')">📋 Liste Lavoro <span class="tab-count" id="tc-oggi">...</span></div>
     <div class="tab" id="tab-mie" onclick="switchTab('mie')">📞 Le Mie <span class="tab-count" id="tc-mie">0</span></div>
-    <div class="tab" id="tab-tutti" onclick="switchTab('tutti')" style="display:none">👥 Tutti gli utenti <span class="tab-count" id="tc-tutti">...</span></div>
+    <div class="tab" id="tab-tutti" onclick="switchTab('tutti')">👥 Tutti gli utenti <span class="tab-count" id="tc-tutti">...</span></div>
     <div class="tab" id="tab-conv" onclick="switchTab('conv')" style="display:none">✅ Riattivati <span class="tab-count" id="tc-conv">0</span></div>
     <div class="tab" id="tab-qualif" onclick="switchTab('qualif')" style="display:none">🌍 Qualificati <span class="tab-count" id="tc-qualif">...</span></div>
     <div style="height:1px;background:#334155;margin:6px 12px"></div>
@@ -1625,9 +1625,12 @@ function switchTab(t){
     loadListePromo(); // aggiorna sempre da Firebase e chiama renderListeUI alla fine
   }
   if(t==='tutti'){
-    if(masterReady){renderTutti();}
+    var _mr=masterReady||window.masterReady;
+    var _mp=masterLoadPromise||window.masterLoadPromise;
+    if(_mr){renderTutti();}
     else{document.getElementById('tutti-tbody').innerHTML='<tr><td colspan="12" style="text-align:center;padding:40px;color:#94A3B8"><div style="font-size:24px;margin-bottom:8px">⏳</div>Caricamento utenti in corso...<br><span style="font-size:11px">Pronto tra qualche secondo</span></td></tr>';
-    masterLoadPromise.then(()=>{if(activeTab==='tutti')renderTutti();});}
+    if(_mp){_mp.then(function(){if(activeTab==='tutti')renderTutti();});}
+    else if(typeof loadMaster==='function'){window.masterLoadPromise=loadMaster().then(function(){window.masterReady=true;if(window.masterUsers)masterUsers=window.masterUsers;if(activeTab==='tutti')renderTutti();});}}
   }
   if(t==='conv')renderConv();
   if(t==='mie')renderMie();
