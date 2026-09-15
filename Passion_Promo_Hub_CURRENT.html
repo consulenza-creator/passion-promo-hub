@@ -3159,8 +3159,8 @@ function _bPromoPill(u){
 function renderBonusOpCell(uname){
   var cs=(window.callState&&window.callState[uname.toLowerCase()])||{};
   var op=cs.op||'';
-  if(op){return'<span class="bassegnato-badge" onclick="openBonusModal(this,''+uname+'')" style="cursor:pointer" title="Cambia">'+op+'</span>';}
-  return'<button class="bbtn-assegna" onclick="openBonusModal(this,''+uname+'')">Assegna</button>';
+  if(op){return'<span class="bassegnato-badge" onclick="openBonusModal(this,\''+uname+'\')" style="cursor:pointer" title="Cambia">'+op+'</span>';}
+  return'<button class="bbtn-assegna" onclick="openBonusModal(this,\''+uname+'\')">Assegna</button>';
 }
 function renderTuttiPage(){
   var start=tuttiPage*TUTTI_PAGE_SIZE,end=Math.min(start+TUTTI_PAGE_SIZE,tuttiFilt.length);
@@ -3171,7 +3171,7 @@ function renderTuttiPage(){
     if(_h&&_h.h_ggr!=null){ggr='<span style="color:'+(_h.h_ggr>=0?'#16A34A':'#DC2626')+';font-weight:700">'+(_h.h_ggr>=0?'+':'')+Math.round(_h.h_ggr).toLocaleString('it-IT')+'€</span>';}
     var pm=u.pm>0?'€'+Number(u.pm).toFixed(2):'—';
     var fil=u.f||'';
-    return '<tr style="cursor:pointer" onclick="openScheda(''+u.u+'')">'+
+    return '<tr style="cursor:pointer" onclick="openScheda(\''+u.u+'\')">'+
       '<td><div style="font-weight:700;font-size:12px">'+u.u+'</div></td>'+
       '<td style="font-size:10px;color:#9CA3AF">'+(u.fn||'—')+'</td>'+
       '<td>'+_bFilPill(fil)+'</td>'+
