@@ -6547,5 +6547,100 @@ function promoUploadCSV(){
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('bonus-modal-overlay').classList.contains('open'))closeBonusModal();});
 })();
 </script>
+
+<script>
+// ══ LOGIN STANDALONE — eseguito separatamente dal blocco principale ══
+(function(){
+  // Sovrascrive sempre doOpLogin nel global scope
+  window.doOpLogin = function(){
+    var uEl=document.getElementById('op-username');
+    var pEl=document.getElementById('op-pin-field');
+    var errEl=document.getElementById('login-error');
+    if(!uEl||!pEl)return;
+    var u=uEl.value.trim(), p=pEl.value.trim();
+    if(!u||!p){if(errEl)errEl.textContent='Inserisci email/nome e password.';return;}
+    var found=null;
+    // AM_ACCOUNTS (superadmin/supervisor)
+    var accounts=window.AM_ACCOUNTS||[];
+    for(var i=0;i<accounts.length;i++){
+      var a=accounts[i];
+      if(!a.attivo)continue;
+      if((a.email===u||a.nome.toLowerCase()===u.toLowerCase())&&a.pwd===p){
+        found={name:a.nome,id:a.id,isAdmin:a.ruolo==='superadmin',isSupervisor:a.ruolo==='supervisor',isTeamLeader:false,filiere:a.filiera?[a.filiera]:[],fathername:[],ruolo:a.ruolo,email:a.email};
+        break;
+      }
+    }
+    // DEFAULT_OPERATORS (pin)
+    if(!found){
+      var ops=[].concat(window.DEFAULT_OPERATORS||[]);
+      var cfgOps=(window.cfg&&window.cfg.operators)||[];
+      ops=cfgOps.concat(ops);
+      for(var j=0;j<ops.length;j++){
+        var op=ops[j];
+        if(!op||!op.active)continue;
+        if(op.name&&op.name.toLowerCase()===u.toLowerCase()&&String(op.pin)===p){
+          found={name:op.name,id:op.id,isAdmin:false,isSupervisor:false,isTeamLeader:false,filiere:op.filiere||[],fathername:op.fathername||[],ruolo:'operatore'};
+          break;
+        }
+      }
+    }
+    if(!found){if(errEl)errEl.textContent='Credenziali non valide.';return;}
+    window.currentUser=found;
+    try{localStorage.setItem('crm_v3_user',JSON.stringify(found));}catch(e){}
+    _doShowApp();
+  };
+
+  window.resetLoginError = function(){
+    var el=document.getElementById('login-error');if(el)el.textContent='';
+  };
+
+  function _doShowApp(){
+    var ld=document.getElementById('loading');
+    var sl=document.getElementById('screen-login');
+    var sa=document.getElementById('screen-app');
+    if(ld)ld.style.display='none';
+    if(sl)sl.style.display='none';
+    if(sa)sa.style.display='flex';
+    var chip=document.getElementById('user-chip');
+    if(chip&&window.currentUser)chip.textContent=window.currentUser.name;
+    var hd=document.getElementById('hdr-date');
+    if(hd)hd.textContent=(function(){var d=new Date();return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();})();
+    // Avvia caricamento dati master
+    if(typeof window.masterLoadPromise==='undefined'||!window.masterLoadPromise){
+      if(typeof loadMaster==='function'){
+        window.masterLoadPromise=loadMaster().then(function(){
+          window.masterReady=true;
+          var tc=document.getElementById('tc-tutti');
+          if(tc&&window.masterUsers)tc.textContent=(window.masterUsers.length||0).toLocaleString('it-IT');
+          try{if(typeof fillFnSelects==='function')fillFnSelects();}catch(e){}
+          if(window.activeTab==='tutti'&&typeof renderTutti==='function')renderTutti();
+          console.log('[Hub] Master pronto:',window.masterUsers&&window.masterUsers.length,'utenti');
+        });
+      }
+    }
+    try{if(typeof switchTab==='function')switchTab('dash');}catch(e){}
+    try{if(typeof startFirebaseSync==='function')startFirebaseSync();}catch(e){}
+    try{if(typeof _startCommPolling==='function')_startCommPolling();}catch(e){}
+  }
+
+  // Override _initApp globale
+  window._initApp = _doShowApp;
+
+  // DOMContentLoaded: mostra login o app
+  function _boot(){
+    var ld=document.getElementById('loading');
+    if(ld)ld.style.display='none';
+    try{
+      var saved=localStorage.getItem('crm_v3_user');
+      if(saved){var u=JSON.parse(saved);if(u&&u.name){window.currentUser=u;_doShowApp();return;}}
+    }catch(e){}
+    var sl=document.getElementById('screen-login');
+    if(sl)sl.style.display='flex';
+  }
+
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_boot);}
+  else{_boot();}
+})();
+</script>
 </body>
 </html>
