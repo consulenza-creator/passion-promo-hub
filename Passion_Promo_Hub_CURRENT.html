@@ -1516,6 +1516,7 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 
 // ── MASTER: Web Worker su thread separato ──
 function loadMaster(){
+  try{
   return new Promise(resolve=>{
     try{
       const el=document.getElementById('master-gz-data');
