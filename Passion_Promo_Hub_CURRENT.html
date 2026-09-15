@@ -1546,6 +1546,32 @@ function loadMaster(){
 }catch(e){}
 }
 
+function loadStoricoSport(){
+  return new Promise(function(resolve){
+    try{
+      var el=document.getElementById('storico-sport-gz-data');
+      if(!el||!el.textContent.trim()){console.warn('storico-sport-gz-data mancante');resolve();return;}
+      var gz=el.textContent.trim();
+      var bin=atob(gz);
+      var bytes=Uint8Array.from(bin,function(c){return c.charCodeAt(0);});
+      var ds=new DecompressionStream('gzip');
+      var wr=ds.writable.getWriter(),rd=ds.readable.getReader();
+      wr.write(bytes);wr.close();
+      var chunks=[];
+      (async function(){
+        while(true){var r=await rd.read();if(r.done)break;chunks.push(r.value);}
+        var tot=chunks.reduce(function(a,c){return a+c.length;},0);
+        var out=new Uint8Array(tot);var off=0;
+        for(var i=0;i<chunks.length;i++){out.set(chunks[i],off);off+=chunks[i].length;}
+        var data=JSON.parse(new TextDecoder().decode(out));
+        Object.assign(STORICO_SPORT,data);
+        window.STORICO_SPORT=STORICO_SPORT;
+        console.log('loadStoricoSport OK:',Object.keys(STORICO_SPORT).length,'utenti storico');
+        resolve();
+      })().catch(function(e){console.warn('loadStoricoSport async error',e);resolve();});
+    }catch(e){console.warn('loadStoricoSport error',e);resolve();}
+  });
+}
 function fillOpSelects(){
   const ops=cfg.operators.filter(o=>o.active!==false).map(o=>o.name);
   ['flt-op','mat-op'].forEach(id=>{
@@ -4160,6 +4186,7 @@ function renderDashboard() {
     if (!dashEl) return;
     var h = '';
     var userName = (window.currentUser && currentUser.name) ? currentUser.name : '';
+    if(!window.currentUser){return;}
     // ── Role-aware hero panel ────────────────────────────────────────────────
     var _isOpRole = !currentUser.isAdmin&&!currentUser.isSupervisor&&!currentUser.isTeamLeader;
     var _myAssigned=0,_myDone=0,_myPct=0;
@@ -6621,6 +6648,14 @@ function promoUploadCSV(){
           try{if(typeof fillFnSelects==='function')fillFnSelects();}catch(e){}
           if(window.activeTab==='tutti'&&typeof renderTutti==='function')renderTutti();
           console.log('[Hub] Master pronto:',window.masterUsers&&window.masterUsers.length,'utenti');
+          // Carica storico sport in background
+          if(typeof loadStoricoSport==='function'&&!window.storicoReady){
+            loadStoricoSport().then(function(){
+              window.storicoReady=true;
+              if(typeof renderTutti==='function')renderTutti();
+              if(typeof renderDashboard==='function')try{renderDashboard();}catch(e){}
+            });
+          }
         });
       }
     }
