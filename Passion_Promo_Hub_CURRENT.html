@@ -442,17 +442,20 @@ th[data-tip],[data-tip]{cursor:help}
 <body>
 <div id="loading"><div class="spinner"></div><h2>Passion Promo Hub</h2><p>Avvio...</p></div>
 <script>
-// Fallback: se window.load non parte entro 6s, mostriamo comunque il login
+// Init: mostra login o app appena il DOM è pronto
 (function(){
-  var _lt=setTimeout(function(){
-    var l=document.getElementById('loading');
-    if(l&&l.style.display!=='none'){
-      l.style.display='none';
-      var sl=document.getElementById('screen-login');
-      if(sl)sl.style.display='flex';
-    }
-  },6000);
-  window.addEventListener('load',function(){clearTimeout(_lt);});
+  function _showScreen(){
+    var ld=document.getElementById('loading');
+    if(ld)ld.style.display='none';
+    try{
+      var saved=localStorage.getItem('crm_v3_user');
+      if(saved){var u=JSON.parse(saved);if(u&&u.name&&typeof _initApp==='function'){_initApp(u);return;}}
+    }catch(e){}
+    var sl=document.getElementById('screen-login');
+    if(sl)sl.style.display='flex';
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_showScreen);}
+  else{_showScreen();}
 })();
 </script>
 
@@ -4748,7 +4751,9 @@ function doOpLogin(){
   _initApp();
 }
 
-function _initApp(){
+function _initApp(userParam){
+  if(userParam&&userParam.name)currentUser=userParam;
+  if(!currentUser){var _sl2=document.getElementById('screen-login');if(_sl2)_sl2.style.display='flex';return;}
   var ld=document.getElementById('loading'),sl=document.getElementById('screen-login'),sa=document.getElementById('screen-app');
   if(ld)ld.style.display='none';
   if(sl)sl.style.display='none';
@@ -4773,21 +4778,7 @@ function _initApp(){
   try{if(typeof _startCommPolling==='function')_startCommPolling();}catch(e){}
 }
 
-// Auto-init alla fine del caricamento pagina
-window.addEventListener('load',function(){
-  var ld=document.getElementById('loading');
-  if(ld)ld.style.display='none';
-  try{
-    var saved=localStorage.getItem(typeof LS_USER!=='undefined'?LS_USER:'crm_v3_user');
-    if(saved){
-      var u=JSON.parse(saved);
-      if(u&&u.name){currentUser=u;_initApp();return;}
-    }
-  }catch(e){}
-  // Nessuna sessione salvata: mostra login
-  var sl=document.getElementById('screen-login');
-  if(sl)sl.style.display='flex';
-});
+// init gestito da DOMContentLoaded in Script1 sopra
 
 </script>
 
